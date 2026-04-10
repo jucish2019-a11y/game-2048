@@ -16,6 +16,17 @@ export default function GameContainer() {
   const gameOver = useGameStore((state) => state.gameOver);
   const continueAfterWin = useGameStore((state) => state.continueAfterWin);
   const reset = useGameStore((state) => state.reset);
+  const initializeGame = useGameStore((state) => state.initializeGame);
+  const grid = useGameStore((state) => state.grid);
+
+  // Initialize game on client mount
+  useEffect(() => {
+    // Check if grid is empty (server-rendered state)
+    const isEmpty = grid.every(row => row.every(cell => cell === 0));
+    if (isEmpty) {
+      initializeGame();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard controls
   useEffect(() => {

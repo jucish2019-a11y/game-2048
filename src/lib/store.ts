@@ -11,6 +11,7 @@ interface GameStore extends GameState {
   undo: () => void;
   reset: () => void;
   continueAfterWin: () => void;
+  initializeGame: () => void;
 }
 
 // Load best score from localStorage
@@ -26,17 +27,23 @@ function saveBestScore(score: number) {
   localStorage.setItem(STORAGE_KEY_BEST_SCORE, score.toString());
 }
 
-// Initialize game
-const initialGame = initGame();
-
 export const useGameStore = create<GameStore>((set, get) => ({
-  // Initial state
-  grid: initialGame.grid,
-  score: initialGame.score,
+  // Initial state (empty grid, initialized on client)
+  grid: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+  score: 0,
   bestScore: loadBestScore(),
   hasWon: false,
   gameOver: false,
   history: [],
+
+  // Initialize game on client-side
+  initializeGame: () => {
+    const newGame = initGame();
+    set({
+      grid: newGame.grid,
+      score: newGame.score,
+    });
+  },
 
   // Move tiles in direction
   move: (direction: Direction) => {

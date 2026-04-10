@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  basePath: '/game-2048',
+  basePath: '',
   images: {
     unoptimized: true,
   },

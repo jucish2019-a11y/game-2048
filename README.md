@@ -2,7 +2,7 @@
 
 A polished, browser-based implementation of the classic 2048 puzzle game, built with Next.js and TypeScript. Swipe or use arrow keys to merge tiles and reach 2048!
 
-**[Play Now →](https://yourusername.github.io/game-2048)**
+**[Play Now →](https://jucish2019-a11y.github.io/game-2048)**
 
 ---
 
@@ -22,7 +22,7 @@ A polished, browser-based implementation of the classic 2048 puzzle game, built 
 ## 🚀 Quick Start
 
 ### Play Online
-Just visit the [live demo](https://yourusername.github.io/game-2048) and start playing!
+Just visit the [live demo](https://jucish2019-a11y.github.io/game-2048) and start playing!
 
 ### Run Locally
 

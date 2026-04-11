@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { useDrag } from '@use-gesture/react';
 import GameBoard from '@/components/GameBoard';
@@ -11,21 +11,50 @@ import GameControls from '@/components/GameControls';
 const SWIPE_THRESHOLD = 30;
 
 export default function GameContainer() {
+  const [isMounted, setIsMounted] = useState(false);
   const move = useGameStore((state) => state.move);
   const hasWon = useGameStore((state) => state.hasWon);
   const gameOver = useGameStore((state) => state.gameOver);
   const continueAfterWin = useGameStore((state) => state.continueAfterWin);
   const reset = useGameStore((state) => state.reset);
   const initializeGame = useGameStore((state) => state.initializeGame);
-  const initialized = useRef(false);
 
-  // Initialize game once on client mount
+  // Mark as mounted to trigger client-side rendering
   useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true;
-      initializeGame();
-    }
+    setIsMounted(true);
+    initializeGame();
   }, [initializeGame]);
+
+  // Show loading state during SSR/initial mount
+  if (!isMounted) {
+    return (
+      <div className="w-full max-w-lg mx-auto px-4">
+        <div className="mb-6">
+          <h1 className="text-5xl font-bold text-game-text mb-2">2048</h1>
+          <p className="text-game-text/70 text-sm">
+            Join the tiles, get to <strong>2048!</strong>
+          </p>
+        </div>
+        <div className="flex gap-4 mb-6">
+          <div className="flex-1 bg-game-bg rounded-lg p-4 text-center">
+            <div className="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-1">Score</div>
+            <div className="text-3xl font-bold text-white">0</div>
+          </div>
+          <div className="flex-1 bg-game-bg rounded-lg p-4 text-center">
+            <div className="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-1">Best</div>
+            <div className="text-3xl font-bold text-white">0</div>
+          </div>
+        </div>
+        <div className="bg-game-bg rounded-lg p-2 w-full max-w-md mx-auto aspect-square animate-pulse">
+          <div className="grid grid-cols-4 grid-rows-4 gap-2 h-full">
+            {Array(16).fill(null).map((_, i) => (
+              <div key={i} className="bg-cell-bg rounded-md" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Keyboard controls
   useEffect(() => {

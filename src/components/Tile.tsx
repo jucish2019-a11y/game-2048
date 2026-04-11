@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { getTileColorClasses, getTileFontSize } from '@/types';
 
 interface TileProps {
@@ -8,7 +9,7 @@ interface TileProps {
   isMerged?: boolean;
 }
 
-export default function Tile({ value, isNew, isMerged }: TileProps) {
+function Tile({ value, isNew, isMerged }: TileProps) {
   if (value === 0) {
     // Empty cell
     return (
@@ -34,3 +35,5 @@ export default function Tile({ value, isNew, isMerged }: TileProps) {
     </div>
   );
 }
+
+export default memo(Tile);

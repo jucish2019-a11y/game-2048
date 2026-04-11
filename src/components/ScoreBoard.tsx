@@ -1,8 +1,9 @@
 'use client';
 
+import { memo } from 'react';
 import { useGameStore } from '@/lib/store';
 
-export default function ScoreBoard() {
+function ScoreBoard() {
   const score = useGameStore((state) => state.score);
   const bestScore = useGameStore((state) => state.bestScore);
 
@@ -30,3 +31,5 @@ export default function ScoreBoard() {
     </div>
   );
 }
+
+export default memo(ScoreBoard);

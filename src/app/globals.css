@@ -66,6 +66,23 @@ body {
   }
 }
 
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Hardware accelerate animations */
+  .animate-tile-appear,
+  .animate-tile-merge {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

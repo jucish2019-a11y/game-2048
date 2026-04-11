@@ -1,9 +1,10 @@
 'use client';
 
+import { memo } from 'react';
 import { useGameStore, useUIStore } from '@/lib/store';
 import { RotateCcw, Undo2, Sun, Moon } from 'lucide-react';
 
-export default function GameControls() {
+function GameControls() {
   const reset = useGameStore((state) => state.reset);
   const undo = useGameStore((state) => state.undo);
   const history = useGameStore((state) => state.history);
@@ -44,3 +45,5 @@ export default function GameControls() {
     </div>
   );
 }
+
+export default memo(GameControls);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useGameStore } from '@/lib/store';
 import { useDrag } from '@use-gesture/react';
 import GameBoard from '@/components/GameBoard';
@@ -8,7 +8,7 @@ import ScoreBoard from '@/components/ScoreBoard';
 import GameControls from '@/components/GameControls';
 
 // Minimum swipe distance to trigger move
-const SWIPE_THRESHOLD = 30;
+const SWIPE_THRESHOLD = 50;
 
 export default function GameContainer() {
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -18,6 +18,7 @@ export default function GameContainer() {
   const continueAfterWin = useGameStore((state) => state.continueAfterWin);
   const reset = useGameStore((state) => state.reset);
   const initializeGame = useGameStore((state) => state.initializeGame);
+  const isMovingRef = useRef(false);
 
   // Initialize game once
   useEffect(() => {
@@ -60,23 +61,43 @@ export default function GameContainer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [move, reset]);
 
-  // Swipe gesture controls
-  const bind = useDrag(({ offset: [dx, dy] }) => {
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    const distance = Math.sqrt(absDx * absDx + absDy * absDy);
+  // Swipe gesture controls - only trigger on gesture END
+  const bind = useDrag(
+    ({ last, movement: [mx, my] }) => {
+      // Only process on last frame (gesture ended)
+      if (!last) return;
+      
+      // Prevent multiple moves during same gesture
+      if (isMovingRef.current) return;
 
-    if (distance < SWIPE_THRESHOLD) return;
+      const absMx = Math.abs(mx);
+      const absMy = Math.abs(my);
+      const distance = Math.sqrt(absMx * absMx + absMy * absMy);
 
-    if (absDx > absDy) {
-      move(dx > 0 ? 'right' : 'left');
-    } else {
-      move(dy > 0 ? 'down' : 'up');
+      if (distance < SWIPE_THRESHOLD) return;
+
+      isMovingRef.current = true;
+
+      if (absMx > absMy) {
+        move(mx > 0 ? 'right' : 'left');
+      } else {
+        move(my > 0 ? 'down' : 'up');
+      }
+
+      // Reset after animation completes
+      setTimeout(() => {
+        isMovingRef.current = false;
+      }, 150);
+    },
+    {
+      threshold: SWIPE_THRESHOLD,
+      preventScroll: true,
+      pointer: { touch: true },
     }
-  });
+  );
 
   return (
-    <div className="w-full max-w-lg mx-auto px-4">
+    <div className="w-full max-w-lg mx-auto px-4 touch-none">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-5xl font-bold text-game-text mb-2">2048</h1>
@@ -89,7 +110,7 @@ export default function GameContainer() {
       <ScoreBoard />
 
       {/* Game Board with swipe detection */}
-      <div {...bind()} className="touch-none">
+      <div {...bind()} className="touch-none" style={{ touchAction: 'none' }}>
         <GameBoard />
       </div>
 

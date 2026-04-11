@@ -1,9 +1,10 @@
 'use client';
 
+import { memo } from 'react';
 import { useGameStore } from '@/lib/store';
 import Tile from './Tile';
 
-export default function GameBoard() {
+function GameBoardInner() {
   const grid = useGameStore((state) => state.grid);
 
   return (
@@ -26,3 +27,5 @@ export default function GameBoard() {
     </div>
   );
 }
+
+export default memo(GameBoardInner);

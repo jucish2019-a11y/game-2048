@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { GameState, Direction, GameHistoryEntry } from '@/types';
-import { move, initGame, hasWon, hasAvailableMoves } from '@/lib/gameLogic';
+import { move, initGame, hasWon, hasAvailableMoves, spawnTile } from '@/lib/gameLogic';
 
 const STORAGE_KEY_BEST_SCORE = 'game-2048-best-score';
 const STORAGE_KEY_DARK_MODE = 'game-2048-dark-mode';
@@ -50,9 +50,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const state = get();
     if (state.gameOver) return;
 
-    const { grid, score, moved } = move(state.grid, direction);
+    const { grid: movedGrid, score: scoreGained, moved } = move(state.grid, direction);
 
     if (!moved) return; // No movement happened
+
+    // Spawn a new tile after successful move
+    const spawnResult = spawnTile(movedGrid);
+    if (!spawnResult) {
+      // No empty cells, game is over
+      set({
+        grid: movedGrid,
+        gameOver: true,
+      });
+      return;
+    }
+
+    const finalGrid = spawnResult.grid;
 
     // Save history for undo
     const newHistory: GameHistoryEntry[] = [
@@ -61,20 +74,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ].slice(-20); // Keep last 20 moves
 
     // Check win
-    const newHasWon = hasWon(grid) && !state.hasWon;
+    const newHasWon = hasWon(finalGrid) && !state.hasWon;
 
     // Check game over
-    const newGameOver = !hasAvailableMoves(grid);
+    const newGameOver = !hasAvailableMoves(finalGrid);
 
     // Update best score
-    const newScore = state.score + score;
+    const newScore = state.score + scoreGained;
     const newBestScore = Math.max(state.bestScore, newScore);
     if (newBestScore > state.bestScore) {
       saveBestScore(newBestScore);
     }
 
     set({
-      grid,
+      grid: finalGrid,
       score: newScore,
       bestScore: newBestScore,
       hasWon: newHasWon || state.hasWon,

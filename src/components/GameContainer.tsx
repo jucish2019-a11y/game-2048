@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/store';
 import { useDrag } from '@use-gesture/react';
 import GameBoard from '@/components/GameBoard';
@@ -17,16 +17,15 @@ export default function GameContainer() {
   const continueAfterWin = useGameStore((state) => state.continueAfterWin);
   const reset = useGameStore((state) => state.reset);
   const initializeGame = useGameStore((state) => state.initializeGame);
-  const grid = useGameStore((state) => state.grid);
+  const initialized = useRef(false);
 
-  // Initialize game on client mount
+  // Initialize game once on client mount
   useEffect(() => {
-    // Check if grid is empty (server-rendered state)
-    const isEmpty = grid.every(row => row.every(cell => cell === 0));
-    if (isEmpty) {
+    if (!initialized.current) {
+      initialized.current = true;
       initializeGame();
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initializeGame]);
 
   // Keyboard controls
   useEffect(() => {

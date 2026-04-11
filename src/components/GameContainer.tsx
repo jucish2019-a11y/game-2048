@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useGameStore } from '@/lib/store';
-import { useDrag } from '@use-gesture/react';
 import GameBoard from '@/components/GameBoard';
 import ScoreBoard from '@/components/ScoreBoard';
 import GameControls from '@/components/GameControls';
 
-// Minimum swipe distance to trigger move
-const SWIPE_THRESHOLD = 50;
+// Minimum swipe distance to trigger move (in pixels)
+const SWIPE_THRESHOLD = 30;
+// Cooldown between moves to prevent accidental double-swipes
+const MOVE_COOLDOWN = 100;
 
 export default function GameContainer() {
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -18,7 +19,10 @@ export default function GameContainer() {
   const continueAfterWin = useGameStore((state) => state.continueAfterWin);
   const reset = useGameStore((state) => state.reset);
   const initializeGame = useGameStore((state) => state.initializeGame);
-  const isMovingRef = useRef(false);
+  
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const lastMoveTimeRef = useRef<number>(0);
+  const boardRef = useRef<HTMLDivElement>(null);
 
   // Initialize game once
   useEffect(() => {
@@ -27,6 +31,62 @@ export default function GameContainer() {
       initializeGame();
     }
   }, [hasInitialized, initializeGame]);
+
+  // Handle touch start
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  // Handle touch end
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    if (!touchStartRef.current) return;
+
+    // Check cooldown
+    const now = Date.now();
+    if (now - lastMoveTimeRef.current < MOVE_COOLDOWN) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    const distance = Math.sqrt(absX * absX + absY * absY);
+
+    // Reset touch start
+    touchStartRef.current = null;
+
+    // Check if swipe is long enough
+    if (distance < SWIPE_THRESHOLD) return;
+
+    // Determine direction based on dominant axis
+    if (absX > absY) {
+      move(deltaX > 0 ? 'right' : 'left');
+    } else {
+      move(deltaY > 0 ? 'down' : 'up');
+    }
+
+    // Update last move time
+    lastMoveTimeRef.current = now;
+  }, [move]);
+
+  // Attach touch event listeners
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+
+    // Add passive listeners for better performance
+    board.addEventListener('touchstart', handleTouchStart, { passive: true });
+    board.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      board.removeEventListener('touchstart', handleTouchStart);
+      board.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [handleTouchStart, handleTouchEnd]);
 
   // Keyboard controls
   useEffect(() => {
@@ -61,43 +121,8 @@ export default function GameContainer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [move, reset]);
 
-  // Swipe gesture controls - only trigger on gesture END
-  const bind = useDrag(
-    ({ last, movement: [mx, my] }) => {
-      // Only process on last frame (gesture ended)
-      if (!last) return;
-      
-      // Prevent multiple moves during same gesture
-      if (isMovingRef.current) return;
-
-      const absMx = Math.abs(mx);
-      const absMy = Math.abs(my);
-      const distance = Math.sqrt(absMx * absMx + absMy * absMy);
-
-      if (distance < SWIPE_THRESHOLD) return;
-
-      isMovingRef.current = true;
-
-      if (absMx > absMy) {
-        move(mx > 0 ? 'right' : 'left');
-      } else {
-        move(my > 0 ? 'down' : 'up');
-      }
-
-      // Reset after animation completes
-      setTimeout(() => {
-        isMovingRef.current = false;
-      }, 150);
-    },
-    {
-      threshold: SWIPE_THRESHOLD,
-      preventScroll: true,
-      pointer: { touch: true },
-    }
-  );
-
   return (
-    <div className="w-full max-w-lg mx-auto px-4 touch-none">
+    <div className="w-full max-w-lg mx-auto px-4">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-5xl font-bold text-game-text mb-2">2048</h1>
@@ -109,8 +134,12 @@ export default function GameContainer() {
       {/* Score */}
       <ScoreBoard />
 
-      {/* Game Board with swipe detection */}
-      <div {...bind()} className="touch-none" style={{ touchAction: 'none' }}>
+      {/* Game Board with touch detection */}
+      <div 
+        ref={boardRef}
+        className="touch-none select-none"
+        style={{ touchAction: 'none', WebkitTouchCallout: 'none' }}
+      >
         <GameBoard />
       </div>
 

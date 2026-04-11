@@ -81,6 +81,12 @@ body {
     will-change: transform, opacity;
     transform: translateZ(0);
   }
+  
+  /* Enable smooth scrolling on game board */
+  .touch-none {
+    -webkit-overflow-scrolling: touch;
+    touch-action: none !important;
+  }
 }
 
 /* Custom scrollbar */

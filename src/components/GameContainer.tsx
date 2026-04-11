@@ -7,12 +7,13 @@ import ScoreBoard from '@/components/ScoreBoard';
 import GameControls from '@/components/GameControls';
 
 // Minimum swipe distance to trigger move (in pixels)
-const SWIPE_THRESHOLD = 30;
+const SWIPE_THRESHOLD = 20;
 // Cooldown between moves to prevent accidental double-swipes
-const MOVE_COOLDOWN = 100;
+const MOVE_COOLDOWN = 80;
 
 export default function GameContainer() {
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const move = useGameStore((state) => state.move);
   const hasWon = useGameStore((state) => state.hasWon);
   const gameOver = useGameStore((state) => state.gameOver);
@@ -23,6 +24,7 @@ export default function GameContainer() {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const lastMoveTimeRef = useRef<number>(0);
   const boardRef = useRef<HTMLDivElement>(null);
+  const animFrameRef = useRef<number | null>(null);
 
   // Initialize game once
   useEffect(() => {
@@ -36,16 +38,39 @@ export default function GameContainer() {
   const handleTouchStart = useCallback((e: TouchEvent) => {
     const touch = e.touches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    setDragOffset({ x: 0, y: 0 });
+  }, []);
+
+  // Handle touch move - update drag offset for visual feedback
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    
+    // Use requestAnimationFrame for smooth updates
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    animFrameRef.current = requestAnimationFrame(() => {
+      setDragOffset({ x: deltaX, y: deltaY });
+    });
   }, []);
 
   // Handle touch end
   const handleTouchEnd = useCallback((e: TouchEvent) => {
     if (!touchStartRef.current) return;
 
+    // Cancel animation frame
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+
     // Check cooldown
     const now = Date.now();
     if (now - lastMoveTimeRef.current < MOVE_COOLDOWN) {
       touchStartRef.current = null;
+      setDragOffset({ x: 0, y: 0 });
       return;
     }
 
@@ -60,17 +85,20 @@ export default function GameContainer() {
     touchStartRef.current = null;
 
     // Check if swipe is long enough
-    if (distance < SWIPE_THRESHOLD) return;
+    if (distance >= SWIPE_THRESHOLD) {
+      // Determine direction based on dominant axis
+      if (absX > absY) {
+        move(deltaX > 0 ? 'right' : 'left');
+      } else {
+        move(deltaY > 0 ? 'down' : 'up');
+      }
 
-    // Determine direction based on dominant axis
-    if (absX > absY) {
-      move(deltaX > 0 ? 'right' : 'left');
-    } else {
-      move(deltaY > 0 ? 'down' : 'up');
+      // Update last move time
+      lastMoveTimeRef.current = now;
     }
 
-    // Update last move time
-    lastMoveTimeRef.current = now;
+    // Animate drag offset back to zero (snap-back effect)
+    setDragOffset({ x: 0, y: 0 });
   }, [move]);
 
   // Attach touch event listeners
@@ -80,13 +108,15 @@ export default function GameContainer() {
 
     // Add passive listeners for better performance
     board.addEventListener('touchstart', handleTouchStart, { passive: true });
+    board.addEventListener('touchmove', handleTouchMove, { passive: false });
     board.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       board.removeEventListener('touchstart', handleTouchStart);
+      board.removeEventListener('touchmove', handleTouchMove);
       board.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleTouchStart, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   // Keyboard controls
   useEffect(() => {
@@ -140,7 +170,7 @@ export default function GameContainer() {
         className="touch-none select-none"
         style={{ touchAction: 'none', WebkitTouchCallout: 'none' }}
       >
-        <GameBoard />
+        <GameBoard dragOffset={dragOffset} />
       </div>
 
       {/* Controls */}

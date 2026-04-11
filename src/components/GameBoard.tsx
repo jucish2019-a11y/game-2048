@@ -16,8 +16,9 @@ export default function GameBoard() {
         {grid.map((row, rowIndex) =>
           row.map((cellValue, colIndex) => (
             <Tile
-              key={`${rowIndex}-${colIndex}`}
+              key={`${rowIndex}-${colIndex}-${cellValue}`}
               value={cellValue}
+              isNew={cellValue !== 0}
             />
           ))
         )}

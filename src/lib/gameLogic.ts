@@ -148,8 +148,8 @@ export function move(grid: number[][], direction: Direction): { grid: number[][]
       break;
   }
 
-  // Check if grid actually changed
-  const moved = JSON.stringify(oldGrid) !== JSON.stringify(result);
+  // Check if grid actually changed (efficient array comparison)
+  const moved = oldGrid.some((row, i) => row.some((val, j) => val !== result[i][j]));
 
   return { grid: result, score: totalScore, moved };
 }
@@ -159,9 +159,12 @@ export function initGame(): { grid: number[][]; score: number } {
   let grid = createEmptyGrid();
 
   // Spawn two initial tiles
-  const spawn1 = spawnTile(grid)!;
+  const spawn1 = spawnTile(grid);
+  if (!spawn1) throw new Error('Failed to spawn initial tile');
   grid = spawn1.grid;
-  const spawn2 = spawnTile(grid)!;
+  
+  const spawn2 = spawnTile(grid);
+  if (!spawn2) throw new Error('Failed to spawn second tile');
   grid = spawn2.grid;
 
   return { grid, score: 0 };

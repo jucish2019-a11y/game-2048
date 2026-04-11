@@ -13,7 +13,7 @@ export default function ScoreBoard() {
         <div className="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-1">
           Score
         </div>
-        <div className="text-3xl font-bold text-white tabular-nums">
+        <div className="text-3xl font-bold text-white tabular-nums" aria-live="polite" aria-atomic="true">
           {score.toLocaleString()}
         </div>
       </div>
@@ -23,7 +23,7 @@ export default function ScoreBoard() {
         <div className="text-xs uppercase tracking-wide text-gray-400 font-semibold mb-1">
           Best
         </div>
-        <div className="text-3xl font-bold text-white tabular-nums">
+        <div className="text-3xl font-bold text-white tabular-nums" aria-live="polite" aria-atomic="true">
           {bestScore.toLocaleString()}
         </div>
       </div>

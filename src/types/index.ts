@@ -15,6 +15,7 @@ export interface GameState {
 export interface GameHistoryEntry {
   grid: number[][];
   score: number;
+  hasWon: boolean;
 }
 
 // Tile position and value for rendering

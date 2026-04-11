@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
@@ -29,7 +30,6 @@ const config: Config = {
       },
       animation: {
         'tile-appear': 'appear 200ms ease-out',
-        'tile-slide': 'slide 100ms ease-out',
         'tile-merge': 'merge 150ms ease-in-out',
         'score-pulse': 'pulse 300ms ease-in-out',
       },
@@ -37,10 +37,6 @@ const config: Config = {
         appear: {
           '0%': { opacity: '0', transform: 'scale(0)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
-        },
-        slide: {
-          '0%': { transform: 'translate(0, 0)' },
-          '100%': { transform: 'translate(var(--slide-x), var(--slide-y))' },
         },
         merge: {
           '0%': { transform: 'scale(1)' },

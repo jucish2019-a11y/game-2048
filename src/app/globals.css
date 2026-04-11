@@ -3,13 +3,11 @@
 @tailwind utilities;
 
 :root {
-  /* Light mode colors */
   --bg-primary: #faf8ef;
   --text-primary: #776e65;
 }
 
-.dark {
-  /* Dark mode colors */
+html.dark {
   --bg-primary: #1a1a2e;
   --text-primary: #eaeaea;
 }
@@ -57,6 +55,14 @@ body {
   }
   100% {
     transform: scale(1);
+  }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-tile-appear,
+  .animate-tile-merge {
+    animation: none;
   }
 }
 

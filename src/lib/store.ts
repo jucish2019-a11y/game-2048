@@ -70,7 +70,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Save history for undo
     const newHistory: GameHistoryEntry[] = [
       ...state.history,
-      { grid: state.grid, score: state.score },
+      { grid: state.grid, score: state.score, hasWon: state.hasWon },
     ].slice(-20); // Keep last 20 moves
 
     // Check win
@@ -105,6 +105,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       grid: lastState.grid,
       score: lastState.score,
+      hasWon: lastState.hasWon,
       history: state.history.slice(0, -1),
       gameOver: false,
     });
